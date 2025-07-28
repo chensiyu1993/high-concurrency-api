@@ -6,6 +6,7 @@ import (
 
 	"high-concurrency-api/dao"
 	"high-concurrency-api/handlers"
+	"high-concurrency-api/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -36,6 +37,11 @@ func main() {
 		log.Fatalf("Failed to connect to database: %s", err)
 	}
 
+	// 自动迁移数据库表
+	if err := db.AutoMigrate(&models.Data{}); err != nil {
+		log.Fatalf("Failed to migrate database: %s", err)
+	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("Failed to get database instance: %s", err)
@@ -63,6 +69,13 @@ func main() {
 	// 创建路由
 	r := gin.Default()
 
+	// 添加健康检查接口
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status": "ok",
+		})
+	})
+
 	// 注册路由
 	r.POST("/api/data", dataHandler.Create)
 	r.PUT("/api/data/:id", dataHandler.Update)
@@ -70,7 +83,7 @@ func main() {
 	r.GET("/api/data/:id", dataHandler.Get)
 
 	// 启动服务器
-	addr := fmt.Sprintf(":%d", viper.GetInt("server.port"))
+	addr := fmt.Sprintf("0.0.0.0:%d", viper.GetInt("server.port"))
 	if err := r.Run(addr); err != nil {
 		log.Fatalf("Failed to start server: %s", err)
 	}
