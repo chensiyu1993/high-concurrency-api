@@ -10,8 +10,14 @@ sudo DEBIAN_FRONTEND=noninteractive apt install -y mysql-server redis-server
 # 使用国内Go镜像
 wget https://mirrors.aliyun.com/golang/go1.20.5.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf go1.20.5.linux-amd64.tar.gz
-echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-source ~/.bashrc
+
+# 设置Go环境变量并立即生效
+export PATH=$PATH:/usr/local/go/bin
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn,direct
+
+# 验证Go安装
+go version
 
 # 下载项目代码
 curl -L https://github.com/chensiyu1993/high-concurrency-api/archive/refs/heads/master.zip -o master.zip
@@ -27,10 +33,6 @@ sudo mysql -e "CREATE DATABASE IF NOT EXISTS high_concurrency_db;"
 sudo systemctl restart mysql
 sudo systemctl restart redis
 
-# 设置Go环境
-export GO111MODULE=on
-export GOPROXY=https://goproxy.cn,direct
-
 # 编译
 go mod tidy
 go build -o api-server
@@ -44,6 +46,9 @@ After=network.target mysql.service redis.service
 [Service]
 Type=simple
 WorkingDirectory=$(pwd)
+Environment="PATH=/usr/local/go/bin:$PATH"
+Environment="GO111MODULE=on"
+Environment="GOPROXY=https://goproxy.cn,direct"
 ExecStart=$(pwd)/api-server
 Restart=always
 User=root
