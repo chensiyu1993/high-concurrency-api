@@ -1,0 +1,19 @@
+server:
+  port: 8080
+  mode: release
+
+mysql:
+  host: localhost
+  port: 3306
+  username: root
+  password: your_password
+  database: high_concurrency_db
+  max_idle_conns: 10
+  max_open_conns: 100
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 100 
